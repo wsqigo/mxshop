@@ -9,8 +9,8 @@ jwt:
   key: nMttfAD5bN%S0Nw84@uR0OwFhCBZb60^
 
 sms:
-  key: LTAI5tDXgbBVcJ6fw94Gok2F
-  secret: NbVP1G8yYe6W93aczMAIqncxGOiUtv
+  key: xxx
+  secret: xxx
 
 
 redis:
