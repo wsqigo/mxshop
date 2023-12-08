@@ -1,0 +1,23 @@
+name: user-web
+port: 8021
+user_srv:
+  host: 127.0.0.1
+  port: 50051
+  name: user-srv
+
+jwt:
+  key: nMttfAD5bN%S0Nw84@uR0OwFhCBZb60^
+
+sms:
+  key: LTAI5tDXgbBVcJ6fw94Gok2F
+  secret: NbVP1G8yYe6W93aczMAIqncxGOiUtv
+
+
+redis:
+  host: 192.168.136.130
+  port: 6379
+  expire: 300
+
+consul:
+  host: 192.168.136.130
+  port: 8500
