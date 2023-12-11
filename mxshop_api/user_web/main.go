@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
+
+	"mxshop_api/user_web/global"
+	"mxshop_api/user_web/initialize"
+	mvalidator "mxshop_api/user_web/validator"
+
 	"github.com/gin-gonic/gin/binding"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
-	"mxshop_api/user_web/global"
-	"mxshop_api/user_web/initialize"
-	mvalidator "mxshop_api/user_web/validator"
 )
 
 func main() {

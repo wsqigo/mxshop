@@ -2,7 +2,7 @@ package initialize
 
 import (
 	"fmt"
-	"github.com/hashicorp/consul/api"
+	_ "github.com/mbobakov/grpc-consul-resolver"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"mxshop_api/user_web/global"
@@ -10,35 +10,15 @@ import (
 )
 
 func InitSrvConn() {
-	// 从注册中心获取到用户服务的信息
-	cfg := api.DefaultConfig()
-	cfg.Address = fmt.Sprintf("%s:%d", global.ServerConfig.ConsulInfo.Host,
-		global.ServerConfig.ConsulInfo.Port)
-
-	client, err := api.NewClient(cfg)
+	consulInfo := global.ServerConfig.ConsulInfo
+	conn, err := grpc.Dial(
+		fmt.Sprintf("consul://%s:%d/%s?wait=14s&tag=wsqigo", consulInfo.Host, consulInfo.Port,
+			global.ServerConfig.UserSrvConfig.Name),
+		grpc.WithInsecure(),
+		grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "round_robin"}`),
+	)
 	if err != nil {
-		panic("new consul client failed. err: " + err.Error())
-	}
-
-	data, err := client.Agent().ServicesWithFilter(fmt.Sprintf(`Service == "%s"`, global.ServerConfig.UserSrvConfig.Name))
-	if err != nil {
-		panic("get service user-srv failed, err: " + err.Error())
-	}
-
-	userSrvHost := data["user-srv"].Address
-	userSrvPort := data["user-srv"].Port
-	if userSrvHost == "" {
-		zap.S().Fatal("[InitSrvConn] 连接 【用户服务失败】")
-		return
-	}
-
-	// 拨号连接用户grpc服务 跨域的问题 -- 后端解决 也可以前端来解决
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", userSrvHost, userSrvPort), grpc.WithInsecure())
-	if err != nil {
-		zap.S().Errorw("[GetUserList] 连接 【用户服务失败】",
-			"msg", err.Error(),
-		)
-		return
+		zap.S().Panicf("[InitSrvConn] 连接用户服务失败")
 	}
 
 	// 生成grpc的client并调用接口
