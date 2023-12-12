@@ -1,0 +1,7 @@
+host: 192.168.136.130
+port: 8848
+namespace: 4084e7fa-9c12-4b15-a6d2-a498eb8e979c
+user: nacos
+password: nacos
+data_id: user-srv
+group: prod

@@ -2,9 +2,12 @@ package initialize
 
 import (
 	"fmt"
-	"github.com/fsnotify/fsnotify"
+	"github.com/nacos-group/nacos-sdk-go/clients"
+	"github.com/nacos-group/nacos-sdk-go/common/constant"
+	"github.com/nacos-group/nacos-sdk-go/vo"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 	"mxshop_srvs/user_srv/global"
 )
 
@@ -17,9 +20,9 @@ func GetEnvInfo(env string) bool {
 func InitConfig() {
 	isDebug := GetEnvInfo("MXSHOP_DEBUG")
 	configFilePrefix := "config"
-	configFileName := fmt.Sprintf("user_srv/%s-pro.yaml", configFilePrefix)
+	configFileName := fmt.Sprintf("user_srv/%s-prod.yaml", configFilePrefix)
 	if isDebug {
-		configFileName = fmt.Sprintf("user_srv/%s-debug.yaml", configFilePrefix)
+		configFileName = fmt.Sprintf("user_srv/%s-stage.yaml", configFilePrefix)
 	}
 
 	v := viper.New()
@@ -29,24 +32,49 @@ func InitConfig() {
 		panic("init config failed, err: " + err.Error())
 	}
 
-	err = v.Unmarshal(&global.ServerConfig)
+	err = v.Unmarshal(&global.NacosConfig)
 	if err != nil {
 		panic("unable to decode into struct, err: " + err.Error())
 	}
 
-	zap.S().Infof("配置信息: %v", global.ServerConfig)
+	zap.S().Infof("配置信息: %v", global.NacosConfig)
 
-	v.WatchConfig()
-	v.OnConfigChange(func(e fsnotify.Event) {
-		zap.S().Info("config file changed:", e.Name)
-		err := v.ReadInConfig()
-		if err != nil {
-			panic("init config failed, err: " + err.Error())
-		}
+	// 从nacos中读取配置信息
+	serverConfigs := []constant.ServerConfig{
+		{
+			IpAddr: global.NacosConfig.Host,
+			Port:   global.NacosConfig.Port,
+			Scheme: "http",
+		},
+	}
 
-		err = v.Unmarshal(&global.ServerConfig)
-		if err != nil {
-			panic("unable to decode into struct, err: " + err.Error())
-		}
+	clientConfig := constant.ClientConfig{
+		NamespaceId:         global.NacosConfig.Namespace,
+		TimeoutMs:           5000,
+		NotLoadCacheAtStart: true,
+		LogDir:              "tmp/nacos/log",
+		CacheDir:            "tmp/nacos/cache",
+		LogLevel:            "debug",
+	}
+
+	configClient, err := clients.NewConfigClient(vo.NacosClientParam{
+		ServerConfigs: serverConfigs,
+		ClientConfig:  &clientConfig,
 	})
+	if err != nil {
+		zap.S().Panic("init nacos client fail. err:", err)
+	}
+
+	content, err := configClient.GetConfig(vo.ConfigParam{
+		DataId: global.NacosConfig.DataId,
+		Group:  global.NacosConfig.Group,
+	})
+	if err != nil {
+		zap.S().Panic("read nacos config fail, err", err)
+	}
+
+	err = yaml.Unmarshal([]byte(content), &global.ServerConfig)
+	if err != nil {
+		zap.S().Panicf("failed to unmarshal yaml: %v", err)
+	}
 }

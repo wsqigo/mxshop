@@ -1,20 +1,30 @@
 package config
 
 type MysqlConfig struct {
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	DBName   string `mapstructure:"db"`
-	User     string `mapstructure:"user"`
-	Password string `mapstructure:"password"`
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	DBName   string `yaml:"db"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
 }
 
 type ConsulConfig struct {
-	Host string `mapstructure:"host"`
-	Port int    `mapstructure:"port"`
+	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
 }
 
 type ServerConfig struct {
-	Name       string       `mapstructure:"name"`
-	MysqlInfo  MysqlConfig  `mapstructure:"mysql"`
-	ConsulInfo ConsulConfig `mapstructure:"consul"`
+	Name       string       `yaml:"name"`
+	MysqlInfo  MysqlConfig  `yaml:"mysql"`
+	ConsulInfo ConsulConfig `yaml:"consul"`
+}
+
+type NacosConfig struct {
+	Host      string `mapstructure:"host"`
+	Port      uint64 `mapstructure:"port"`
+	User      string `mapstructure:"user"`
+	Password  string `mapstructure:"password"`
+	Namespace string `mapstructure:"namespace"`
+	DataId    string `mapstructure:"data_id"`
+	Group     string `mapstructure:"group"`
 }
