@@ -63,11 +63,6 @@ type GoodsServer struct {
 //	panic("implement me")
 //}
 //
-//func (g GoodsServer) BrandList(ctx context.Context, request *proto.BrandFilterRequest) (*proto.BrandListResponse, error) {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
 //func (g GoodsServer) CreateBrand(ctx context.Context, request *proto.BrandRequest) (*proto.BrandInfoResponse, error) {
 //	//TODO implement me
 //	panic("implement me")
