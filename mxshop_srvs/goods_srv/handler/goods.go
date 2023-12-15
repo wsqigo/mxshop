@@ -63,21 +63,6 @@ type GoodsServer struct {
 //	panic("implement me")
 //}
 //
-//func (g GoodsServer) CreateBrand(ctx context.Context, request *proto.BrandRequest) (*proto.BrandInfoResponse, error) {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
-//func (g GoodsServer) DeleteBrand(ctx context.Context, request *proto.BrandRequest) (*emptypb.Empty, error) {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
-//func (g GoodsServer) UpdateBrand(ctx context.Context, request *proto.BrandRequest) (*emptypb.Empty, error) {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
 //func (g GoodsServer) BannerList(ctx context.Context, empty *emptypb.Empty) (*proto.BannerListResponse, error) {
 //	//TODO implement me
 //	panic("implement me")
@@ -99,11 +84,6 @@ type GoodsServer struct {
 //}
 //
 //func (g GoodsServer) CategoryBrandList(ctx context.Context, request *proto.CategoryBrandFilterRequest) (*proto.CategoryBrandListResponse, error) {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
-//func (g GoodsServer) GetCategoryBrandList(ctx context.Context, request *proto.CategoryInfoRequest) (*proto.BrandListResponse, error) {
 //	//TODO implement me
 //	panic("implement me")
 //}
