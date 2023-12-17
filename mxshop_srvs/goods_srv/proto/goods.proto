@@ -29,7 +29,7 @@ service Goods {
   rpc UpdateBrand(BrandInfoRequest) returns(google.protobuf.Empty); // 修改品牌信息
 
   // 轮播图
-  rpc BannerList(google.protobuf.Empty) returns(BannerListResponse); // 获取轮播列表信息
+  rpc GetBannerList(google.protobuf.Empty) returns(BannerListResponse); // 获取轮播列表信息
   rpc CreateBanner(BannerInfoRequest) returns(BannerResponse); // 添加轮播图
   rpc DeleteBanner(BannerInfoRequest) returns(google.protobuf.Empty); //删除轮播图
   rpc UpdateBanner(BannerInfoRequest) returns(google.protobuf.Empty); // 修改轮播图

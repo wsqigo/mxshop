@@ -13,7 +13,7 @@ var (
 )
 
 func init() {
-	conn, err := grpc.Dial("192.168.2.2:4764", grpc.WithInsecure())
+	conn, err := grpc.Dial("192.168.2.2:50051", grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}

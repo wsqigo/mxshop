@@ -10,11 +10,11 @@ import (
 
 type BaseModel struct {
 	// 手动指定类型，以防外键创建失败
-	ID        int32     `gorm:"primarykey;type:int"`
-	CreatedAt time.Time `gorm:"column:created_time"`
-	UpdatedAt time.Time `gorm:"column:updated_time"`
-	DeletedAt gorm.DeletedAt
-	IsDeleted bool
+	ID        int32          `gorm:"primarykey;type:int" json:"id"`
+	CreatedAt time.Time      `gorm:"column:created_time" json:"-"`
+	UpdatedAt time.Time      `gorm:"column:updated_time" json:"-"`
+	DeletedAt gorm.DeletedAt `json:"-"`
+	IsDeleted bool           `json:"-"`
 }
 
 type GormList []string

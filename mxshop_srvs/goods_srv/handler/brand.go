@@ -11,7 +11,7 @@ import (
 )
 
 // GetBrandList 品牌和轮播图
-func (g *GoodsServer) GetBrandList(ctx context.Context, request *proto.BrandFilterRequest) (*proto.BrandListResponse, error) {
+func (s *GoodsServer) GetBrandList(ctx context.Context, request *proto.BrandFilterRequest) (*proto.BrandListResponse, error) {
 	res := &proto.BrandListResponse{}
 
 	var brands []model.Brand
@@ -56,15 +56,12 @@ func (s *GoodsServer) DeleteBrand(ctx context.Context, request *proto.BrandInfoR
 	if result.Error != nil {
 		return nil, status.Errorf(codes.Internal, "删除品牌失败")
 	}
-	if result.RowsAffected == 0 {
-		return nil, status.Errorf(codes.NotFound, "品牌不存在")
-	}
 
 	return &emptypb.Empty{}, nil
 }
 
 func (s *GoodsServer) UpdateBrand(ctx context.Context, request *proto.BrandInfoRequest) (*emptypb.Empty, error) {
-	if result := global.DB.First(&model.Brand{Name: request.Name}); result.RowsAffected == 0 {
+	if result := global.DB.First(&model.Brand{}, request.Id); result.RowsAffected == 0 {
 		return nil, status.Errorf(codes.NotFound, "品牌不存在")
 	}
 
@@ -73,7 +70,7 @@ func (s *GoodsServer) UpdateBrand(ctx context.Context, request *proto.BrandInfoR
 		Logo: request.Logo,
 	}
 
-	result := global.DB.Updates(&brand)
+	result := global.DB.Where("id = ?", request.Id).Updates(&brand)
 	if result.Error != nil {
 		return nil, status.Errorf(codes.Internal, "更新品牌失败")
 	}
