@@ -180,8 +180,8 @@ message CreateGoodsInfo {
   string name = 2;
   string goodsSn = 3;
   int32 stocks = 7; // 库存
-  float marketPrice = 8;
-  float shopPrice = 9;
+  double marketPrice = 8;
+  double shopPrice = 9;
   string goodsBrief = 10;
   string goodsDesc = 11;
   bool shipFree = 12;
@@ -227,8 +227,8 @@ message GoodsInfoResponse {
   int32 clickNum = 5;
   int32 soldNum = 6;
   int32 favNum = 7;
-  float  marketPrice = 9;
-  float shopPrice = 10;
+  double marketPrice = 9;
+  double shopPrice = 10;
   string goodsBrief = 11;
   string goodsDesc = 12;
   bool shipFree = 13;
