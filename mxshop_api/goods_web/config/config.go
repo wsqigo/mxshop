@@ -1,32 +1,25 @@
 package config
 
-type UserSrvConfig struct {
+type GoodsSrvConfig struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
 	Name string `yaml:"name"`
 }
 
 type ServerConfig struct {
-	Name          string        `yaml:"name"`
-	Host          string        `yaml:"host"`
-	Tags          []string      `yaml:"tags"`
-	Port          int           `yaml:"port"`
-	UserSrvConfig UserSrvConfig `yaml:"user_srv"`
-	JWTInfo       JWTConfig     `yaml:"jwt"`
-	AliSmsInfo    AliSmsConfig  `yaml:"sms"`
-	RedisInfo     RedisConfig   `yaml:"redis"`
-	ConsulInfo    ConsulConfig  `yaml:"consul"`
+	Name           string         `yaml:"name"`
+	Host           string         `yaml:"host"`
+	Port           int            `yaml:"port"`
+	Tags           []string       `yaml:"tags"`
+	GoodsSrvConfig GoodsSrvConfig `yaml:"goods_srv"`
+	JWTInfo        JWTConfig      `yaml:"jwt"`
+	ConsulInfo     ConsulConfig   `yaml:"consul"`
 }
 
 type RedisConfig struct {
 	Host   string `yaml:"host"`
 	Port   int    `yaml:"port"`
 	Expire int    `yaml:"expire"`
-}
-
-type AliSmsConfig struct {
-	ApiKey    string `yaml:"key"`
-	ApiSecret string `yaml:"secret"`
 }
 
 type JWTConfig struct {

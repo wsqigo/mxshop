@@ -64,7 +64,7 @@ func (s *GoodsServer) GetSubCategory(ctx context.Context, request *proto.Categor
 
 	var subCategoryList []*model.Category
 	result := global.DB.Where(&model.Category{ParentCategoryID: request.Id}).Find(&subCategoryList)
-	if result != nil {
+	if result.Error != nil {
 		return nil, status.Errorf(codes.Internal, "获取子分类错误")
 	}
 

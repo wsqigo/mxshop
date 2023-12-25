@@ -47,7 +47,12 @@ func (s *GoodsServer) CreateBanner(ctx context.Context, request *proto.BannerInf
 		return nil, status.Errorf(codes.Internal, "创建轮播图失败")
 	}
 
-	return &proto.BannerResponse{Id: banner.ID}, nil
+	return &proto.BannerResponse{
+		Id:    banner.ID,
+		Index: banner.Index,
+		Image: banner.Image,
+		Url:   banner.Url,
+	}, nil
 }
 
 func (s *GoodsServer) DeleteBanner(ctx context.Context, request *proto.BannerInfoRequest) (*emptypb.Empty, error) {

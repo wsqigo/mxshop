@@ -182,7 +182,7 @@ func (s *GoodsServer) UpdateGoods(ctx context.Context, info *proto.CreateGoodsIn
 		GoodsFrontImage: info.GoodsFrontImage,
 	}
 
-	result := global.DB.Select("*").Updates(goods)
+	result := global.DB.Where("id = ?", goods.ID).Updates(goods)
 	if result.Error != nil {
 		return nil, result.Error
 	}
