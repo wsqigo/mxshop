@@ -22,10 +22,10 @@ import (
 )
 
 // 请填写您的AccessKeyId。
-var accessKeyId string = "LTAI5tDXgbBVcJ6fw94Gok2F"
+var accessKeyId string = ""
 
 // 请填写您的AccessKeySecret。
-var accessKeySecret string = "NbVP1G8yYe6W93aczMAIqncxGOiUtv"
+var accessKeySecret string = ""
 
 // host的格式为 bucketname.endpoint ，请替换为您的真实信息。
 var host string = "http://mxsshop.oss-cn-beijing.aliyuncs.com"
