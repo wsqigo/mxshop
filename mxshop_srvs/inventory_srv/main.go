@@ -26,6 +26,7 @@ func main() {
 	initialize.InitLogger()
 	initialize.InitConfig()
 	initialize.InitDB()
+	initialize.InitRedisSync()
 
 	port, err := utils.GetFreePort()
 	if err != nil {
