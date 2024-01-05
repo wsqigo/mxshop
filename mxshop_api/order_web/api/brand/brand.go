@@ -5,12 +5,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 	"go.uber.org/zap"
-	"mxshop_api/goods_web/api"
-	"mxshop_api/goods_web/api/category"
-	"mxshop_api/goods_web/forms"
-	"mxshop_api/goods_web/global"
-	"mxshop_api/goods_web/global/response"
-	"mxshop_api/goods_web/proto"
+	"mxshop_api/order_web/api"
+	"mxshop_api/order_web/api/category"
+	"mxshop_api/order_web/forms"
+	"mxshop_api/order_web/global"
+	"mxshop_api/order_web/global/response"
+	"mxshop_api/order_web/proto"
 	"net/http"
 )
 
