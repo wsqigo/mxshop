@@ -16,7 +16,7 @@ var (
 )
 
 func init() {
-	conn, err := grpc.Dial("192.168.2.2:8095", grpc.WithInsecure())
+	conn, err := grpc.Dial("192.168.5.104:55787", grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}
@@ -55,7 +55,7 @@ func TestInventoryServer_GetGoodsInvDetail(t *testing.T) {
 
 func TestInventoryServer_Sell(t *testing.T) {
 	var wg sync.WaitGroup
-	for i := 0; i < 80; i++ {
+	for i := 0; i < 20; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

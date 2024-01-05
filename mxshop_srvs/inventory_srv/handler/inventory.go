@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -45,41 +46,40 @@ func (s *InventoryServer) GetGoodsInvDetail(ctx context.Context, info *proto.Goo
 
 func (s *InventoryServer) Sell(ctx context.Context, info *proto.SellInfo) (*emptypb.Empty, error) {
 	// 扣减库存， 本地事务 [1:10, 2:5, 3:20]
+	// 数据库基本的一个应用场景：数据库事务
 	tx := global.DB.Begin()
-
 	for _, goodsInfo := range info.GoodsInfos {
-		for {
-			inv := model.Inventory{}
-			// 悲观锁
-			//result := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where(model.Inventory{Goods: goodsInfo.GoodsId}).First(&inv)
-			result := global.DB.Where(model.Inventory{Goods: goodsInfo.GoodsId}).First(&inv)
-			if result.Error != nil {
-				tx.Rollback()
-				return nil, result.Error
-			}
+		inv := model.Inventory{}
 
-			// 判断库存是否充足
-			if inv.Stocks < goodsInfo.Num {
-				tx.Rollback()
-				return nil, status.Errorf(codes.ResourceExhausted, "库存不足")
-			}
+		fmt.Println("开始获取锁")
+		mutex := global.RedSync.NewMutex(fmt.Sprintf("goods_%d", goodsInfo.GoodsId))
+		if err := mutex.Lock(); err != nil {
+			return nil, status.Errorf(codes.Internal, "lock failed")
+		}
+		result := global.DB.Where(model.Inventory{Goods: goodsInfo.GoodsId}).First(&inv)
+		if result.Error != nil {
+			tx.Rollback()
+			return nil, status.Errorf(codes.Internal, result.Error.Error())
+		}
 
-			// 扣减，会出现数据不一致的问题 - 锁，分布式锁
-			inv.Stocks -= goodsInfo.Num
+		// 判断库存是否充足
+		if inv.Stocks < goodsInfo.Num {
+			tx.Rollback()
+			return nil, status.Errorf(codes.ResourceExhausted, "库存不足")
+		}
 
-			// inv有primary key，不需要where判断
-			result = tx.Model(&inv).Select("Stocks", "Version").
-				Where("goods = ? and version = ?", inv.Goods, inv.Version).
-				Updates(model.Inventory{Stocks: inv.Stocks, Version: inv.Version + 1})
-			if result.Error != nil {
-				tx.Rollback()
-				return nil, result.Error
-			}
+		// 扣减，会出现数据不一致的问题 - 锁，分布式锁
+		inv.Stocks -= goodsInfo.Num
 
-			if result.RowsAffected == 1 {
-				break
-			}
-			zap.S().Info("库存扣减失败")
+		// inv 有 primary key，不需要 where 判断
+		result = tx.Model(&inv).Update("stocks", inv.Stocks)
+		if result.Error != nil {
+			tx.Rollback()
+			return nil, result.Error
+		}
+
+		if ok, err := mutex.Unlock(); !ok || err != nil {
+			return nil, status.Errorf(codes.Internal, "unlock failed")
 		}
 	}
 
