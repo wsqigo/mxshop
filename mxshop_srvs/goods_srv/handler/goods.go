@@ -2,10 +2,12 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"gorm.io/gorm"
 	"mxshop_srvs/goods_srv/global"
 	"mxshop_srvs/goods_srv/model"
 	"mxshop_srvs/goods_srv/proto"
@@ -195,6 +197,9 @@ func (s *GoodsServer) GetGoodsDetail(ctx context.Context, request *proto.GoodInf
 
 	result := global.DB.First(goods, request.Id)
 	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.NotFound, "商品不存在")
+		}
 		return nil, status.Errorf(codes.Internal, "获取商品详情失败")
 	}
 

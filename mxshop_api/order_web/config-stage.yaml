@@ -1,7 +1,7 @@
 host: 192.168.136.130
 port: 8848
-namespace: 16757136-b237-4c88-b4e9-a8fb0c548191
+namespace: ea71d089-a1cd-44de-8ad9-acc207f1363f
 user: nacos
 password: nacos
-data_id: goods-web
+data_id: order-web
 group: stage

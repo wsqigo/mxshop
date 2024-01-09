@@ -1,19 +1,21 @@
 package config
 
-type GoodsSrvConfig struct {
-	Host string `yaml:"host"`
-	Port int    `yaml:"port"`
+type SrvConfig struct {
 	Name string `yaml:"name"`
 }
 
 type ServerConfig struct {
-	Name           string         `yaml:"name"`
-	Host           string         `yaml:"host"`
-	Port           int            `yaml:"port"`
-	Tags           []string       `yaml:"tags"`
-	GoodsSrvConfig GoodsSrvConfig `yaml:"goods_srv"`
-	JWTInfo        JWTConfig      `yaml:"jwt"`
-	ConsulInfo     ConsulConfig   `yaml:"consul"`
+	Name string   `yaml:"name"`
+	Host string   `yaml:"host"`
+	Port int      `yaml:"port"`
+	Tags []string `yaml:"tags"`
+
+	GoodsSrvConfig  SrvConfig    `yaml:"goods_srv"`
+	OrderSrvConfig  SrvConfig    `yaml:"order_srv"`
+	InventoryConfig SrvConfig    `yaml:"inventory_srv"`
+	JWTInfo         JWTConfig    `yaml:"jwt"`
+	ConsulInfo      ConsulConfig `yaml:"consul"`
+	AlipayInfo      AlipayConfig `yaml:"alipay"`
 }
 
 type RedisConfig struct {
@@ -29,6 +31,14 @@ type JWTConfig struct {
 type ConsulConfig struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
+}
+
+type AlipayConfig struct {
+	AppId        string `yaml:"app_id"`
+	PrivateKey   string `yaml:"private_key"`
+	AliPublicKey string `yaml:"ali_public_key"`
+	NotifyUrl    string `yaml:"notify_url"`
+	ReturnUrl    string `yaml:"return_url"`
 }
 
 // NacosConfig 读取nacos配置

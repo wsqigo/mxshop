@@ -14,5 +14,7 @@ var (
 
 	NacosConfig config.NacosConfig
 
-	GoodsSrvClient proto.GoodsClient
+	GoodsSrvClient     proto.GoodsClient
+	OrderSrvClient     proto.OrderClient
+	InventorySrvClient proto.InventoryClient
 )

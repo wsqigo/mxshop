@@ -19,10 +19,8 @@ func InitRouter() *gin.Engine {
 	// 配置跨域
 	r.Use(middlewares.Cors())
 
-	apiGroup := r.Group("/g/v1")
-	router.InitGoodsRouter(apiGroup)
-	router.InitCategoryRouter(apiGroup)
-	router.InitBannerRouter(apiGroup)
-	router.InitBrandRouter(apiGroup)
+	apiGroup := r.Group("/o/v1")
+	router.InitOrderRouter(apiGroup)
+	router.InitCartRouter(apiGroup)
 	return r
 }

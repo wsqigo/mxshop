@@ -83,7 +83,7 @@ func (s *OrderServer) CreateCartItem(ctx context.Context, request *proto.CartIte
 }
 
 func (s *OrderServer) UpdateCartItem(ctx context.Context, request *proto.CartItemRequest) (*emptypb.Empty, error) {
-	// 更新购物车数量，
+	// 更新购物车记录，更新数量和选中状态
 	updateField := map[string]any{
 		"checked": request.Checked,
 	}
@@ -100,7 +100,7 @@ func (s *OrderServer) UpdateCartItem(ctx context.Context, request *proto.CartIte
 }
 
 func (s *OrderServer) DeleteCartItem(ctx context.Context, request *proto.CartItemRequest) (*emptypb.Empty, error) {
-	result := global.DB.Delete(&model.ShoppingCart{}, request.Id)
+	result := global.DB.Where("goods = ? and user = ?", request.GoodsId, request.UserId).Delete(&model.ShoppingCart{})
 	if result.Error != nil {
 		return nil, status.Errorf(codes.Internal, "删除购物车失败")
 	}
@@ -121,6 +121,9 @@ func (s *OrderServer) CreateOrder(ctx context.Context, request *proto.OrderReque
 	var shopCarts []*model.ShoppingCart
 	result := global.DB.Where(model.ShoppingCart{User: request.UserId, Checked: true}).Find(&shopCarts)
 	if result.Error != nil {
+		return nil, status.Errorf(codes.Internal, result.Error.Error())
+	}
+	if result.RowsAffected == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "没有选中结算的商品")
 	}
 
@@ -217,7 +220,8 @@ func (s *OrderServer) GetOrderList(ctx context.Context, request *proto.OrderFilt
 	}
 
 	var orders []model.OrderInfo
-	result = global.DB.Scopes(Paginate(request.Pages, request.PagePerNums)).Find(&orders)
+	result = global.DB.Scopes(Paginate(request.Pages, request.PagePerNums)).
+		Where(model.OrderInfo{User: request.UserId}).Find(&orders)
 	if result.Error != nil {
 		return nil, status.Error(codes.Internal, "数据库内部错误")
 	}
@@ -228,6 +232,7 @@ func (s *OrderServer) GetOrderList(ctx context.Context, request *proto.OrderFilt
 		orderList = append(orderList, Model2Response(order))
 	}
 
+	res.Data = orderList
 	return res, nil
 }
 

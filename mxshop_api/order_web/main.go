@@ -10,7 +10,11 @@ import (
 	"mxshop_api/order_web/initialize"
 	"mxshop_api/order_web/utils"
 	"mxshop_api/order_web/utils/register"
+	mvalidator "mxshop_api/order_web/validator"
 
+	"github.com/gin-gonic/gin/binding"
+	ut "github.com/go-playground/universal-translator"
+	"github.com/go-playground/validator/v10"
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -43,6 +47,18 @@ func main() {
 		if err == nil {
 			global.ServerConfig.Port = port
 		}
+	}
+
+	// 注册验证器
+	v, ok := binding.Validator.Engine().(*validator.Validate)
+	if ok {
+		_ = v.RegisterValidation("mobile", mvalidator.ValidateMobile)
+		_ = v.RegisterTranslation("mobile", global.Trans, func(ut ut.Translator) error {
+			return ut.Add("mobile", "{0} 非法的手机号码!", true) // see universal-translation
+		}, func(ut ut.Translator, fe validator.FieldError) string {
+			t, _ := ut.T("mobile", fe.Field())
+			return t
+		})
 	}
 
 	// 服务注册

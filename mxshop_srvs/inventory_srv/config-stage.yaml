@@ -1,8 +1,6 @@
-# host: 192.168.136.130 # windows
-host: 127.0.0.1 # mac
+host: 192.168.136.130 # windows
 port: 8848
-# namespace: 9d8a6096-87c7-42e0-a23e-196ebb3c7846 # windows
-namespace: e3ce1c5f-fe88-4941-a6f5-756ff5150a26 # mac
+namespace: 9d8a6096-87c7-42e0-a23e-196ebb3c7846 # windows
 user: nacos
 password: nacos
 data_id: inventory-srv
