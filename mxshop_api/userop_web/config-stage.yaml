@@ -1,0 +1,7 @@
+host: 192.168.136.130
+port: 8848
+namespace: fd7ca3a6-8bf6-4357-87fe-731cd56801b5
+user: nacos
+password: nacos
+data_id: userop-web
+group: stage
