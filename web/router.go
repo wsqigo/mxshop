@@ -44,6 +44,7 @@ func (r *router) addRoute(method, path string, handler HandlerFunc) {
 			panic("web: path '/' is already registered")
 		}
 		root.handler = handler
+		root.route = path
 		return
 	}
 	path = path[1:]
@@ -58,6 +59,7 @@ func (r *router) addRoute(method, path string, handler HandlerFunc) {
 	if root.handler != nil {
 		panic("web: path is already registered")
 	}
+	root.route = path
 	root.handler = handler
 }
 
@@ -117,6 +119,8 @@ type node struct {
 	paramChild *node
 	// 路径参数
 	paramName string
+
+	route string
 
 	// 节点的处理函数
 	handler HandlerFunc

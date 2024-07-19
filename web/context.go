@@ -16,6 +16,8 @@ type Context struct {
 	PathParams map[string]string
 	// cacheQueryValues 用来存储查询参数
 	cacheQueryValues url.Values
+	// MatchedRoute 用来存储匹配的路由
+	MatchedRoute string
 }
 
 type StringValue struct {

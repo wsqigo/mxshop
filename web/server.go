@@ -17,12 +17,28 @@ type Server interface {
 type HTTPServer struct {
 	// addr string 创建的时候传递，还是 Start 接收。这个都是可以的
 	router
+
+	mdls []Middleware // 中间件
 }
 
-func NewHTTPServer() *HTTPServer {
-	return &HTTPServer{
+// HTTPServerOption 模式
+type HTTPServerOption func(*HTTPServer)
+
+// ServerWithMiddleware 添加中间件
+func ServerWithMiddleware(mdls ...Middleware) HTTPServerOption {
+	return func(s *HTTPServer) {
+		s.mdls = append(s.mdls, mdls...)
+	}
+}
+
+func NewHTTPServer(opts ...HTTPServerOption) *HTTPServer {
+	s := &HTTPServer{
 		router: newRouter(),
 	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }
 
 // ServeHTTP 处理请求的入口
@@ -32,8 +48,13 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Resp: w,
 	}
 
+	root := s.serve
+	// 洋葱模式，将中间件组合成链
+	for i := len(s.mdls) - 1; i >= 0; i-- {
+		root = s.mdls[i](root)
+	}
 	// 查找路由，执行代码
-	s.serve(ctx)
+	root(ctx)
 }
 
 func (s *HTTPServer) serve(ctx *Context) {
@@ -45,6 +66,7 @@ func (s *HTTPServer) serve(ctx *Context) {
 		return
 	}
 	ctx.PathParams = info.pathParams
+	ctx.MatchedRoute = info.n.route
 	info.n.handler(ctx)
 }
 

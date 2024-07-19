@@ -2,42 +2,46 @@ package web
 
 import (
 	"fmt"
-	"io"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
-func readBodyOnce(w http.ResponseWriter, r *http.Request) {
-	r.URL.Query()
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		fmt.Fprintf(w, "read body error: %v", err)
-		// 记住要返回，不然就还会执行后面的代码
-		return
+func TestMiddlewareChain_Success(t *testing.T) {
+	// Create a new HTTPServer instance with mock middleware
+	server := NewHTTPServer()
+	server.mdls = []Middleware{
+		func(next HandlerFunc) HandlerFunc {
+			return func(ctx *Context) {
+				fmt.Println("middleware1 start")
+				next(ctx)
+				fmt.Println("middleware1 end")
+			}
+		},
+		func(next HandlerFunc) HandlerFunc {
+			return func(ctx *Context) {
+				fmt.Println("middleware2 start")
+				next(ctx)
+				fmt.Println("middleware2 end")
+			}
+		},
 	}
-	// 类型转换，将 []byte 转为 string
-	fmt.Fprintf(w, "read body: %s", body)
 
-	// 尝试再次读取，啥也读不到，但是也不会报错
-	body, err = io.ReadAll(r.Body)
-	if err != nil {
-		// 不会进来这里
-		fmt.Fprintf(w, "read the data one more time error: %v", err)
-		return
-	}
-	fmt.Fprintf(w, "read the data one more time: [%s] and read data length: %d", body, len(body))
-}
-
-func TestServer(t *testing.T) {
-	s := NewHTTPServer()
-	s.Get("/user/:id", func(ctx *Context) {
-		id, err := ctx.PathValue("id").ToInt64()
-		if err != nil {
-			ctx.Resp.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		fmt.Println(id)
+	// Add route
+	server.Get("/test", func(ctx *Context) {
+		fmt.Println("test")
 	})
-	s.Start(":8081")
+
+	// Create a test request
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	w := httptest.NewRecorder()
+
+	// Call the server
+	server.ServeHTTP(w, req)
+
+	// Check response
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status OK; got %d", resp.StatusCode)
+	}
 }
