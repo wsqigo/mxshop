@@ -1,6 +1,9 @@
 package web
 
-import "net/http"
+import (
+	"log"
+	"net/http"
+)
 
 type Server interface {
 	http.Handler
@@ -53,6 +56,14 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for i := len(s.mdls) - 1; i >= 0; i-- {
 		root = s.mdls[i](root)
 	}
+
+	var m Middleware = func(next HandlerFunc) HandlerFunc {
+		return func(ctx *Context) {
+			next(ctx)
+			s.flashResp(ctx)
+		}
+	}
+	root = m(root)
 	// 查找路由，执行代码
 	root(ctx)
 }
@@ -61,8 +72,8 @@ func (s *HTTPServer) serve(ctx *Context) {
 	// 先查找路由树
 	info, ok := s.findRoute(ctx.Req.Method, ctx.Req.URL.Path)
 	if !ok || info.n.handler == nil {
-		ctx.Resp.WriteHeader(http.StatusNotFound)
-		ctx.Resp.Write([]byte("404 not found"))
+		ctx.RespStatusCode = http.StatusNotFound
+		ctx.RespData = []byte("not found")
 		return
 	}
 	ctx.PathParams = info.pathParams
@@ -86,6 +97,14 @@ func (s *HTTPServer) Get(path string, handler HandlerFunc) {
 // Start 启动服务器
 func (s *HTTPServer) Start(addr string) error {
 	return http.ListenAndServe(addr, s)
+}
+
+func (s *HTTPServer) flashResp(ctx *Context) {
+	ctx.Resp.WriteHeader(ctx.RespStatusCode)
+	n, err := ctx.Resp.Write(ctx.RespData)
+	if err != nil {
+		log.Println("flashResp error:", n, err)
+	}
 }
 
 type HandlerFunc func(ctx *Context)

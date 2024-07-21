@@ -9,7 +9,10 @@ import (
 )
 
 type Context struct {
-	Req  *http.Request
+	Req *http.Request
+	// Resp 原生的 ResponseWriter。当你直接使用 Resp 的时候，
+	// 那么相当于你绕开了 RespStatusCode 和 RespData。
+	// 响应数据直接被发送到前端，其他中间件将无法修改响应
 	Resp http.ResponseWriter
 
 	// PathParams 用来存储路由参数
@@ -18,6 +21,9 @@ type Context struct {
 	cacheQueryValues url.Values
 	// MatchedRoute 用来存储匹配的路由
 	MatchedRoute string
+	// RespStatusCode 用来存储 HTTP 状态码
+	RespStatusCode int
+	RespData       []byte
 }
 
 type StringValue struct {
@@ -97,10 +103,9 @@ func (c *Context) RespJson(code int, val any) error {
 		return err
 	}
 	// 设置响应状态
-	c.Resp.WriteHeader(code)
-	// 设置响应头
-	c.Resp.Header().Set("Content-Type", "application/json")
-	_, err = c.Resp.Write(bs)
+	c.RespStatusCode = code
+	c.Resp.Header().Add("Content-Type", "application/json")
+	c.RespData = bs
 
 	return err
 }
@@ -111,12 +116,12 @@ func (c *Context) RespJsonOK(val any) error {
 
 func (c *Context) String(code int, val string) error {
 	// 设置响应状态
-	c.Resp.WriteHeader(code)
+	c.RespStatusCode = code
 	// 设置响应头
-	c.Resp.Header().Set("Content-Type", "text/plain")
-	_, err := c.Resp.Write([]byte(val))
+	c.Resp.Header().Add("Content-Type", "text/plain")
+	c.RespData = []byte(val)
 
-	return err
+	return nil
 }
 
 func (c *Context) SetCookie(ck *http.Cookie) {
