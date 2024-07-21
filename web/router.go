@@ -23,7 +23,7 @@ func newRouter() router {
 // addRoute 注册路由
 // method 是 HTTP 方法
 // path 是路由路径，必须以 / 开头，中间不能有连续的 /
-func (r *router) addRoute(method, path string, handler HandlerFunc) {
+func (r *router) addRoute(method, path string, handler HandlerFunc, mdls ...Middleware) {
 	if path == "" {
 		panic("web: path is empty")
 	}
@@ -45,6 +45,7 @@ func (r *router) addRoute(method, path string, handler HandlerFunc) {
 		}
 		root.handler = handler
 		root.route = path
+		root.mdls = mdls
 		return
 	}
 	path = path[1:]
@@ -60,6 +61,7 @@ func (r *router) addRoute(method, path string, handler HandlerFunc) {
 		panic("web: path is already registered")
 	}
 	root.route = path
+	root.mdls = mdls
 	root.handler = handler
 }
 
@@ -73,23 +75,63 @@ func (r *router) findRoute(method, path string) (*matchInfo, bool) {
 	}
 
 	if path == "/" {
-		return &matchInfo{n: root}, true
+		return &matchInfo{n: root, mdls: root.mdls}, true
 	}
 
 	mi := &matchInfo{}
 	segs := strings.Split(path[1:], "/")
+	cur := root
 	for _, seg := range segs {
-		root, ok = root.childOf(seg)
+		cur, ok = cur.childOf(seg)
 		if !ok {
 			return nil, false
 		}
-		if root.paramName != "" {
-			mi.addValue(root.paramName, seg)
+		if cur.paramName != "" {
+			mi.addValue(cur.paramName, seg)
 		}
 	}
 
-	mi.n = root
+	mi.n = cur
+	mi.mdls = r.findMdls(root, segs)
 	return mi, true
+}
+
+func (r *router) findMdls(root *node, segs []string) []Middleware {
+	// 层序遍历
+	type queue struct {
+		level int
+		n     *node
+	}
+	mdls := make([]Middleware, 0)
+	q := []queue{{level: -1, n: root}}
+	for len(q) > 0 && q[0].level < len(segs) {
+		n := q[0]
+		q = q[1:]
+		mdls = append(mdls, n.n.mdls...)
+		level := n.level + 1
+		// 在匹配通配符
+		if n.n.wildChild != nil {
+			q = append(q, queue{level: level, n: n.n.wildChild})
+		}
+		// 在匹配参数路径
+		if n.n.paramChild != nil {
+			q = append(q, queue{level: level, n: n.n.paramChild})
+		}
+		// 在匹配正则表达式
+		if n.n.regexChild != nil {
+			if n.n.regexChild.regExpr.MatchString(segs[n.level]) {
+				q = append(q, queue{level: level, n: n.n.regexChild})
+			}
+		}
+		// 先匹配子节点
+		if level < len(segs) {
+			if child, ok := n.n.children[segs[level]]; ok {
+				q = append(q, queue{level: level, n: child})
+			}
+		}
+	}
+
+	return mdls
 }
 
 // 节点类型
@@ -124,6 +166,8 @@ type node struct {
 
 	// 节点的处理函数
 	handler HandlerFunc
+	// 中间件
+	mdls []Middleware
 }
 
 func (n *node) childOrCreate(path string) *node {
@@ -235,6 +279,7 @@ func (n *node) childOrCreateParam(path string, paramName string) *node {
 
 type matchInfo struct {
 	n          *node
+	mdls       []Middleware
 	pathParams map[string]string
 }
 

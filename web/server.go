@@ -82,8 +82,8 @@ func (s *HTTPServer) serve(ctx *Context) {
 }
 
 // AddRoute 注册路由
-func (s *HTTPServer) addRoute(method, path string, handler HandlerFunc) {
-	s.router.addRoute(method, path, handler)
+func (s *HTTPServer) addRoute(method, path string, handler HandlerFunc, mdls ...Middleware) {
+	s.router.addRoute(method, path, handler, mdls...)
 }
 
 func (s *HTTPServer) Post(path string, handler HandlerFunc) {
@@ -97,6 +97,11 @@ func (s *HTTPServer) Get(path string, handler HandlerFunc) {
 // Start 启动服务器
 func (s *HTTPServer) Start(addr string) error {
 	return http.ListenAndServe(addr, s)
+}
+
+// Use 在路由树中注册中间件
+func (s *HTTPServer) Use(method, path string, mdls ...Middleware) {
+	s.addRoute(method, path, nil, mdls...)
 }
 
 func (s *HTTPServer) flashResp(ctx *Context) {
