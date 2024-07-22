@@ -24,6 +24,8 @@ type Context struct {
 	// RespStatusCode 用来存储 HTTP 状态码
 	RespStatusCode int
 	RespData       []byte
+	// 渲染模板引擎
+	templateEngine TemplateEngine
 }
 
 type StringValue struct {
@@ -126,4 +128,15 @@ func (c *Context) String(code int, val string) error {
 
 func (c *Context) SetCookie(ck *http.Cookie) {
 	http.SetCookie(c.Resp, ck)
+}
+
+func (c *Context) Render(tplName string, data any) error {
+	var err error
+	c.RespData, err = c.templateEngine.Render(c.Req.Context(), tplName, data)
+	c.RespStatusCode = http.StatusOK
+	if err != nil {
+		c.RespStatusCode = http.StatusInternalServerError
+	}
+
+	return err
 }

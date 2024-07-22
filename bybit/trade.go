@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	client := bybit.NewBybitHttpClient("8ZuF0gBseHHDPRVEt3", "5ya70v8sZax6EhpqdkxuEKedJKvpqCHhFnLp", bybit.WithBaseURL(bybit.TESTNET))
+	client := bybit.NewBybitHttpClient("", "", bybit.WithBaseURL(bybit.TESTNET))
 	params := map[string]interface{}{
 		"category":    "linear",
 		"symbol":      "BTCUSDT",

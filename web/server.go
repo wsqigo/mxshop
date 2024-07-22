@@ -22,6 +22,8 @@ type HTTPServer struct {
 	router
 
 	mdls []Middleware // 中间件
+
+	tplEngine TemplateEngine
 }
 
 // HTTPServerOption 模式
@@ -31,6 +33,13 @@ type HTTPServerOption func(*HTTPServer)
 func ServerWithMiddleware(mdls ...Middleware) HTTPServerOption {
 	return func(s *HTTPServer) {
 		s.mdls = append(s.mdls, mdls...)
+	}
+}
+
+// ServerWithTemplateEngine 设置模板引擎
+func ServerWithTemplateEngine(engine TemplateEngine) HTTPServerOption {
+	return func(s *HTTPServer) {
+		s.tplEngine = engine
 	}
 }
 
@@ -47,8 +56,9 @@ func NewHTTPServer(opts ...HTTPServerOption) *HTTPServer {
 // ServeHTTP 处理请求的入口
 func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := &Context{
-		Req:  r,
-		Resp: w,
+		Req:            r,
+		Resp:           w,
+		templateEngine: s.tplEngine,
 	}
 
 	root := s.serve
