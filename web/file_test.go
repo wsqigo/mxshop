@@ -72,7 +72,7 @@ func TestFileDownloader(t *testing.T) {
 func TestStaticResourceHandler(t *testing.T) {
 	s := NewHTTPServer()
 
-	handler, err := NewStaticResourceHandler("./testdata/img", "/img")
+	handler, err := NewStaticResourceHandler("./testdata/img")
 	assert.NoError(t, err)
 	s.Get("/img/:file", handler.Handle)
 	// 在浏览器中访问:http://localhost:8081/img/come_on_baby.png

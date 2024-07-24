@@ -1,12 +1,15 @@
 package web
 
 import (
+	lru "github.com/hashicorp/golang-lru"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 )
 
 type FileUploader struct {
@@ -94,3 +97,135 @@ func (f *FileDownloader) Handle() HandlerFunc {
 }
 
 // -------------------------------静态资源下载-------------------------------
+
+type StaticResourceHandlerOption func(*StaticResourceHandler)
+
+// WithFileCache 静态文件将会被缓存
+// maxFileSizeThreshold 超过这个大小的文件将不会被缓存
+// maxCacheFileCnt 最多缓存的文件数
+func WithFileCache(maxFileSizeThreshold int, maxCacheFileCnt int) StaticResourceHandlerOption {
+	return func(s *StaticResourceHandler) {
+		c, err := lru.New(maxCacheFileCnt)
+		if err != nil {
+			log.Printf("could not create lru cache: %v", err)
+			return
+		}
+		s.maxFileSize = maxFileSizeThreshold
+		s.cache = c
+	}
+}
+
+type StaticResourceHandler struct {
+	Dir               string
+	extContentTypeMap map[string]string
+
+	cache       *lru.Cache // 缓存文件内容
+	maxFileSize int
+}
+
+func NewStaticResourceHandler(dir string, opts ...StaticResourceHandlerOption) (*StaticResourceHandler, error) {
+	cache, err := lru.New(100)
+	if err != nil {
+		return nil, err
+	}
+	res := &StaticResourceHandler{
+		Dir:         dir,
+		cache:       cache,
+		maxFileSize: 10 * 1024 * 1024,
+		extContentTypeMap: map[string]string{
+			"jpeg": "image/jpeg",
+			"jpe":  "image/jpeg",
+			"jpg":  "image/jpeg",
+			"png":  "image/png",
+			"css":  "text/css",
+			"js":   "application/javascript",
+			"html": "text/html",
+			"pdf":  "image/pdf",
+		},
+	}
+	for _, opt := range opts {
+		opt(res)
+	}
+	return res, nil
+}
+
+func (s *StaticResourceHandler) Handle(ctx *Context) {
+	req, err := ctx.PathValue("file").String()
+	if err != nil {
+		ctx.RespData = []byte("path file error: " + err.Error())
+		ctx.RespStatusCode = http.StatusBadRequest
+		return
+	}
+
+	if item, ok := s.readFileFromData(req); ok {
+		log.Printf("从缓存中读取文件: %s", req)
+		s.writeItemAsResponse(ctx, item)
+		return
+	}
+
+	log.Printf("从磁盘读取文件: %s", req)
+	file, err := os.Open(req)
+	if err != nil {
+		ctx.RespData = []byte("open file error: " + err.Error())
+		ctx.RespStatusCode = http.StatusInternalServerError
+		return
+	}
+	defer file.Close()
+
+	// 读取数据返回
+	ext := filepath.Ext(req)
+	dst := filepath.Join(s.Dir, filepath.Clean(req))
+	data, err := os.ReadFile(dst)
+	if err != nil {
+		ctx.RespData = []byte("read file error: " + err.Error())
+		ctx.RespStatusCode = http.StatusInternalServerError
+		return
+	}
+
+	t, ok := s.extContentTypeMap[ext]
+	if !ok {
+		ctx.RespData = []byte("unknown content type: " + ext)
+		ctx.RespStatusCode = http.StatusInternalServerError
+		return
+	}
+	item := &fileCacheItem{
+		fileName:    req,
+		fileSize:    len(data),
+		data:        data,
+		contentType: t,
+	}
+
+	s.cacheFile(item)
+	s.writeItemAsResponse(ctx, item)
+}
+
+func (s *StaticResourceHandler) readFileFromData(req string) (*fileCacheItem, bool) {
+	// 从缓存中获取文件
+	if s.cache != nil {
+		if item, ok := s.cache.Get(req); ok {
+			return item.(*fileCacheItem), true
+		}
+	}
+	return nil, false
+}
+
+func (s *StaticResourceHandler) writeItemAsResponse(ctx *Context, item *fileCacheItem) {
+	ctx.RespStatusCode = http.StatusOK
+	ctx.Resp.Header().Set("Content-Type", item.contentType)
+	ctx.Resp.Header().Set("Content-Length", strconv.Itoa(item.fileSize))
+	ctx.RespData = item.data
+}
+
+// 文件缓存项
+func (s *StaticResourceHandler) cacheFile(item *fileCacheItem) {
+	if s.cache != nil && item.fileSize < s.maxFileSize {
+		s.cache.Add(item.fileName, item)
+	}
+}
+
+type fileCacheItem struct {
+	fileName    string
+	fileSize    int
+	data        []byte
+	contentType string
+}
