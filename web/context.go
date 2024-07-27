@@ -15,17 +15,23 @@ type Context struct {
 	// 响应数据直接被发送到前端，其他中间件将无法修改响应
 	Resp http.ResponseWriter
 
+	// 这个主要是为了个 middleware 读写用的
+	// RespStatusCode 用来存储 HTTP 状态码
+	RespStatusCode int
+	RespData       []byte
+
 	// PathParams 用来存储路由参数
 	PathParams map[string]string
 	// cacheQueryValues 用来存储查询参数
 	cacheQueryValues url.Values
 	// MatchedRoute 用来存储匹配的路由
 	MatchedRoute string
-	// RespStatusCode 用来存储 HTTP 状态码
-	RespStatusCode int
-	RespData       []byte
+
 	// 渲染模板引擎
 	templateEngine TemplateEngine
+
+	// UserValues 用来存储用户自定义数据
+	UserValues map[string]any
 }
 
 type StringValue struct {
